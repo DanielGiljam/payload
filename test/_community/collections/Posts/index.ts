@@ -11,7 +11,7 @@ export const PostsCollection: CollectionConfig = {
     livePreview: {
       url: ({ req }) => {
         console.log('req.origin', req.origin)
-        return `${req.origin}/example`
+        return `/example`
       },
     },
   },

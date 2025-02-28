@@ -1,6 +1,7 @@
 import nextEnvImport from '@next/env'
 import chalk from 'chalk'
 import { createServer } from 'http'
+import { createServer as createHttpsServer } from 'https'
 import minimist from 'minimist'
 import nextImport from 'next'
 import fs from 'node:fs'
@@ -116,10 +117,16 @@ let resolveServer: () => void
 const serverPromise = new Promise<void>((res) => (resolveServer = res))
 
 void app.prepare().then(() => {
-  createServer(async (req, res) => {
-    const parsedUrl = parse(req.url || '', true)
-    await handle(req, res, parsedUrl)
-  }).listen(availablePort, () => {
+  createHttpsServer(
+    {
+      key: fs.readFileSync(path.join(dirname, 'server.key')),
+      cert: fs.readFileSync(path.join(dirname, 'server.cert')),
+    },
+    async (req, res) => {
+      const parsedUrl = parse(req.url || '', true)
+      await handle(req, res, parsedUrl)
+    },
+  ).listen(availablePort, () => {
     resolveServer()
   })
 })
@@ -128,8 +135,9 @@ await serverPromise
 process.env.PAYLOAD_DROP_DATABASE = process.env.PAYLOAD_DROP_DATABASE === 'false' ? 'false' : 'true'
 
 // fetch the admin url to force a render
-void fetch(`http://localhost:${availablePort}${adminRoute}`)
-void fetch(`http://localhost:${availablePort}/api/access`)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+void fetch(`https://localhost:${availablePort}${adminRoute}`)
+void fetch(`https://localhost:${availablePort}/api/access`)
 // This ensures that the next-server process is killed when this process is killed and doesn't linger around.
 process.on('SIGINT', () => {
   if (child) {
