@@ -8,6 +8,12 @@ export const PostsCollection: CollectionConfig = {
   slug: postsSlug,
   admin: {
     useAsTitle: 'title',
+    livePreview: {
+      url: ({ req }) => {
+        console.log('req.origin', req.origin)
+        return `${req.origin}/example`
+      },
+    },
   },
   fields: [
     {
